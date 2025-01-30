@@ -24,9 +24,9 @@ def blochsim(B, T1, T2, dt, method='rk4'):
 
 
     if method=='eul':
-        lib.c_blochsim_eul(B_ptr, M_ptr, T1, T2, ntime, np.float64(dt))
         M = np.zeros(np.shape(B), dtype=np.float64)
         M_ptr = M.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        lib.c_blochsim_eul(B_ptr, M_ptr, T1, T2, ntime, np.float64(dt))
     elif method=='rk4':
         M = np.zeros((int(np.shape(B)[0] / 2), 3), dtype=np.float64)
         M_ptr = M.ctypes.data_as(ctypes.POINTER(ctypes.c_double))

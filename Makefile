@@ -1,14 +1,19 @@
 CC = gcc
+CFLAGS = -Wall -Wextra
+INCL = -Iincl
 
-SRCS = bloch_eul.c bloch_rk.c
+SRCS = src/bloch_eul.c src/bloch_rk.c
 OFILES = $(SRCS:.c=.o)
 
-NAME = UM_blochsim.so
+NAME = UM_Blochsim.so
 
 all: preclean $(NAME) oclean
 
+%.o : %.c
+	$(CC) $(INCL) -fPIC -c $< -o $@
+
 $(NAME): $(OFILES)
-	$(CC) -shared -o $(NAME) -fPIC $(SRCS)
+	$(CC) -shared -o $(NAME) $(OFILES)
 
 oclean:
 	rm -f $(OFILES)
