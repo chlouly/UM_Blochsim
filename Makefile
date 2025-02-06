@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra
 INCL = -Iincl
 
-SRCS = src/bloch_eul.c src/bloch_rk.c
+SRCS = src/bloch_eul.c src/bloch_rk4.c
 OFILES = $(SRCS:.c=.o)
 
 NAME = UM_Blochsim.so
