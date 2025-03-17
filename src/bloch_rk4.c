@@ -15,10 +15,10 @@
 
 void c_blochsim_rk4(//double *Mi,
 		double *B,
-    double *M,
+        double *M,
 		double T1,
 		double T2,
-    int nstep,
+        int nstep,
 		double dt
 )   { 
     /* dt in ms (B timestep, not M. M timestep is h) */
