@@ -2,16 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "blochsim_core.h"
+#include "blochsim_3d.h"
 
-#define RKADD_REP(M, k, M_out, scale) \
-    (M_out)[X] = (M)[X] + ((k)[X] * (scale)); \
-    (M_out)[Y] = (M)[Y] + ((k)[Y] * (scale)); \
-    (M_out)[Z] = (M)[Z] + ((k)[Z] * (scale)); \
-
-#define RKADD(k, M_out, scale) \
-    (M_out)[X] += (k)[X] * (scale); \
-    (M_out)[Y] += (k)[Y] * (scale); \
-    (M_out)[Z] += (k)[Z] * (scale); \
 
 void c_blochsim_rk4(//double *Mi,
 		double *B,

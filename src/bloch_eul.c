@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdio.h>
+#include "blochsim_3d.h"
 #include "blochsim_core.h"
 
 
@@ -9,9 +10,8 @@ void c_blochsim_eul(//double *Mi,
 		long double T1,
 		long double T2,
 		int nstep,
-		long double dt)
-{
-    printf("dt: %Lf\n", dt);
+		long double dt  
+) {
     M[X]=0.0;    //Mi[0];
     M[Y]=0.0;    //Mi[1];
     M[Z]=1.0;    //Mi[2];
