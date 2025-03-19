@@ -12,7 +12,44 @@
         - src/bloch_ljn.c
 */
 
-void bloch_LJN(/* ADD INPUT TYPES */);
+void c_blochsim_ljn(
+    double *,
+    double *,
+    double *,
+    int,
+    double,
+    double,
+    double,
+    double,
+    double,
+    double,
+    double,
+    double,
+    double,
+    double
+);
+
+void LJN_RF_excite(
+    double *,
+    double *,
+    double *,
+    double
+);
+
+void LJN_decay_and_transfer(
+    double *,
+    double *,
+    double,
+    double,
+    double,
+    double,
+    double,
+    double,
+    double,
+    double,
+    double,
+    double
+);
 
 #define X 0
 #define Y 1
@@ -32,5 +69,11 @@ void bloch_LJN(/* ADD INPUT TYPES */);
     (out)[X] = (A)[X] / (norm); \
     (out)[Y] = (A)[Y] / (norm); \
     (out)[Z] = (A)[Z] / (norm); \
+
+#define ASSIGN_VEC(A, B) \
+    (B)[X] = (A)[X]; \
+    (B)[Y] = (A)[Y]; \
+    (B)[Z] = (A)[Z]; \
+    (B)[S] = (A)[S]; \
 
 #endif /* __BLOCHSIM_LJN__ */

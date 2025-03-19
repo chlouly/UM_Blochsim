@@ -14,6 +14,6 @@
 #define TOLERANCE 1e-3
 
 #define isnaprox(a, b) ((((a) - (b)) > TOLERANCE) || (((a) - (b)) < -TOLERANCE))
-#define isapprox(a, b) (!isnapprox(a, b))
+#define isaprox(a, b) (!isnaprox(a, b))
 
 #endif /* __BLOCHSIM_CORE__ */
