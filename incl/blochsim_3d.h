@@ -59,6 +59,11 @@ void c_bloch_step(double *, double *, double *, double *, double, double, double
     (out)[Y] = ((A)[Y] + (B)[Y]) / 2; \
     (out)[Z] = ((A)[Z] + (B)[Z]) / 2; \
 
+#define EXTRAP(A, B, out) \
+    (out)[X] = (2 * (B)[X] - (A)[X]); \
+    (out)[Y] = (2 * (B)[Y] - (A)[Y]); \
+    (out)[Z] = (2 * (B)[Z] - (A)[Z]); \
+
 #define ZERO(M) \
     (M)[X] = 0.0; \
     (M)[Y] = 0.0; \

@@ -37,12 +37,10 @@ void c_blochsim_rk4(//double *Mi,
     PRINT_VEC(M_tmp);
 
     int n;
-    for (n = 0; n < niter; n += 2) { // += 2 because we simulate t+2 and interpolate t+1
+    for (n = 0; n < niter - 2; n += 2) { // += 2 because we simulate t+2 and interpolate t+1
+        //printf("==== %d / %d ====\n", n, niter);
         FILL(M_tmp, M + off(n))
-        //printf("\n%d",n);
-        //PRINT_VEC(B + off(n));
-        //printf("m_tmp");
-        //PRINT_VEC(M + off(n));
+
         c_bloch_step(B + off(n), M + off(n), M_tmp, k, T1, T2, h, (double)(1./6.), (double)(0.5));
         c_bloch_step(B + off(n + 1), M + off(n), M_tmp, k, T1, T2, h, (double)(1./3.), (double)(0.5));
         c_bloch_step(B + off(n + 1), M + off(n), M_tmp, k, T1, T2, h, (double)(1./3.), (double)(1.0));
@@ -53,7 +51,12 @@ void c_blochsim_rk4(//double *Mi,
 
         // Interpollate to find the M value between the current and next
         MIDPT(M + off(n), M + off(n + 2), M + off(n + 1));
-        //if (n > 20) break;
+    }
+
+    // Handling final case
+    // This means we missed the very last entry of M
+    if (n == (niter - 2)) {
+        EXTRAP(M + off(niter - 3), M + off(niter - 2), M + off(niter - 1));
     }
 }
 
