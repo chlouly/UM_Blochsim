@@ -10,7 +10,7 @@ lib = ctypes.CDLL(lib_path)
 lib.c_blochsim_eul.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_double]
 lib.c_blochsim_rk4.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_double]
 lib.c_blochsim_ljn.argtypes = [
-    ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), 
+    ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
     ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double,
     ctypes.c_double, ctypes.c_double, ctypes.c_double   
 ]
@@ -72,7 +72,7 @@ def blochsim_rk4(B, T1, T2, dt, plot=False, dsample=1, timer=False):
 
     return M
 
-def blochsim_ljn(B, s, T1s, T1f, T2f, dt, obs_time, ks, kf, f, F, lam, plot=False, dsample=1, timer=False):
+def blochsim_ljn(B, s, M_start, T1s, T1f, T2f, dt, obs_time, ks, kf, f, F, lam, plot=False, dsample=1, timer=False):
     if not isinstance(B, np.ndarray):
         raise TypeError("Input must be a NumPy array.")
     if B.dtype != np.float64:
@@ -81,16 +81,23 @@ def blochsim_ljn(B, s, T1s, T1f, T2f, dt, obs_time, ks, kf, f, F, lam, plot=Fals
         raise ValueError("B must be 2 dimensional")
     if B.shape[1] != 3:
         raise ValueError("The first dimension of B must have length 3 (Simulating 3D Space), got", B.shape[1])
+    if len(s.shape) != 1:
+        raise ValueError("The first dimension of s must have length 1, got", s.shape[1])
+    if B.shape[0] != s.shape[0]:
+        raise ValueError("B and s must have the same length in dimesnion 0, got lengths: B: ", B.shape[0], " and s: ", s.shape[0])
+    if len(M_start) != 4:
+        raise ValueError("The starting magnetization must have dimension (1, 4), 3 flow components and one semisoid component, got: ", M_start.shape)
     
     ntime = np.shape(B)[0]
     M = np.zeros((ntime, 4), dtype=np.float64)
 
     B_ptr = B.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
     M_ptr = M.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    M_start_ptr = M_start.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
     s_ptr = s.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
     start_t = tm.time()
-    lib.c_blochsim_ljn(M_ptr, B_ptr, s_ptr, ntime, np.float64(dt), obs_time, T1s, T1f, T2f, kf, ks, f, F, lam)
+    lib.c_blochsim_ljn(M_ptr, B_ptr, s_ptr, M_start_ptr, ntime, np.float64(dt), obs_time, T1s, T1f, T2f, kf, ks, f, F, lam)
     end_t = tm.time()
 
     if timer:

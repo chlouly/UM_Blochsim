@@ -11,7 +11,7 @@
 #define PI 3.141592653589
 #define GAMBAR 42577.478461     // gamma/2pi [kHz/T]
 #define GAMMA GAMBAR * 2 * PI    // gamma [rad/us/T]
-#define TOLERANCE 1e-3
+#define TOLERANCE 1e-12
 
 #define isnaprox(a, b) ((((a) - (b)) > TOLERANCE) || (((a) - (b)) < -TOLERANCE))
 #define isaprox(a, b) (!isnaprox(a, b))

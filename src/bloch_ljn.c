@@ -8,6 +8,7 @@ void c_blochsim_ljn(
     double * M,     // Acts as function output
     double * B,
     double * s,     // s(t) values
+    double * M_start,
     int n_time,
     double dt,      // tau
     double obs_t,   // zeta
@@ -23,16 +24,23 @@ void c_blochsim_ljn(
     // Precalculations
     double T1_app = (1 / T1f) + (F / lam);
     double T2_app = (1 / T2f) + (F / lam);
-    
+
     // M_a is the same as M_d from the previous itteration
     double M_b[4];
     // M_c is our output data, since that's what we keep
     double M_d[4];
 
+    // Initializing M
+    ASSIGN_VEC(M_start, M);
+    ASSIGN_VEC(M_start, M_d);
+
     for (int i = 1; i < n_time; i++) {
         // M_b[i] = R_i M_d[i - 1]
         // Equivalent to RF pulses and gradients.
         LJN_RF_excite(M_d, M_b, B + off(i), dt);
+
+        //PRINTVEC(M_d);
+        //PRINTVEC(M_b);
 
         // out = A(z_i) C(z_i) E(z_i) M_b[i] + (I - A(z_i) C(z_i) E(z_i)) D()
         LJN_decay_and_transfer(
@@ -112,6 +120,7 @@ void LJN_RF_excite(
 
     // Scaling the Semisoid component
     // TODO - Absorption linshape of the semisoid pool
+    // We're supposed to assume the semisoid pool gets saturated
     M_out[S] = M_in[S] * exp(-PI * pow(GAMMA * B_mag, 2.0) * dt);
 }
 

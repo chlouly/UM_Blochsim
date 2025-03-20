@@ -16,6 +16,7 @@ void c_blochsim_ljn(
     double *,
     double *,
     double *,
+    double *,
     int,
     double,
     double,
@@ -75,5 +76,9 @@ void LJN_decay_and_transfer(
     (B)[Y] = (A)[Y]; \
     (B)[Z] = (A)[Z]; \
     (B)[S] = (A)[S]; \
+
+#define PRINTVEC(A) printf("[ %f   %f   %f   %f ]\n", (A)[X], (A)[Y], (A)[Z], (A)[S]);
+
+
 
 #endif /* __BLOCHSIM_LJN__ */
