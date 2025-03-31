@@ -78,7 +78,17 @@ void LJN_decay_and_transfer(
     (B)[S] = (A)[S]; \
 
 #define PRINTVEC(A) printf("[ %f   %f   %f   %f ]\n", (A)[X], (A)[Y], (A)[Z], (A)[S]);
+#define PRINTVEC_3(A) printf("[ %f   %f   %f ]\n", (A)[X], (A)[Y], (A)[Z]);
 
+#define CROSS_3(A, B, C, scale) \
+    (C)[X] = ((A)[Y] * (B)[Z] - (A)[Z] * (B)[Y]) * (scale); \
+    (C)[Y] = ((A)[Z] * (B)[X] - (A)[X] * (B)[Z]) * (scale); \
+    (C)[Z] = ((A)[X] * (B)[Y] - (A)[Y] * (B)[X]) * (scale); \
+
+#define ADD_VEC_3(A, B) \
+    (A)[X] += (B)[X]; \
+    (A)[Y] += (B)[Y]; \
+    (A)[Z] += (B)[Z]; \
 
 
 #endif /* __BLOCHSIM_LJN__ */

@@ -37,7 +37,10 @@ void c_blochsim_ljn(
     for (int i = 1; i < n_time; i++) {
         // M_b[i] = R_i M_d[i - 1]
         // Equivalent to RF pulses and gradients.
-        LJN_RF_excite(M_d, M_b, B + off(i), dt);
+        LJN_RF_excite(M_d, M_b, B + off3(i), dt);
+
+        ASSIGN_VEC(M_b, M + off(i));
+        ASSIGN_VEC(M_b, M_d);
 
         //PRINTVEC(M_d);
         //PRINTVEC(M_b);
@@ -62,7 +65,7 @@ void c_blochsim_ljn(
         LJN_decay_and_transfer(
             M + off(i),
             M_d,
-            dt,
+            dt - obs_t,
             s[i],
             T1_app,
             T2_app,
@@ -93,35 +96,43 @@ void LJN_RF_excite(
 
     // Rotations (theta !~= 0)
     if (isnaprox(B_mag, 0.0)) {
-        double theta = GAMMA * dt * B_mag;
-        double u[3];
-        NORMALIZE(B_eff, B_mag, u);
+        // double theta = GAMMA * dt * B_mag;
+        // double u[3];
+        // NORMALIZE(B_eff, B_mag, u);
+        // //printf("%lf\n", theta);
 
-        double c_t = cos(theta);
-        double s_t = sin(theta);
+        // double c_t = cos(theta);
+        // double s_t = sin(theta);
     
-        double u_x = u[X];
-        double u_y = u[Y];
-        double u_z = u[Z];
+        // double u_x = u[X];
+        // double u_y = u[Y];
+        // double u_z = u[Z];
 
-        M_out[X] = 
-            (c_t + pow(u_x, 2.0) * (1 - c_t)) * (M_in[X]) +
-            (u_x * u_y * (1 - c_t) - u_z * s_t) * (M_in[Y]) + 
-            (u_x * u_z * (1 - c_t) + u_y * s_t) * (M_in[Z]);
-        M_out[Y] = 
-            (u_x * u_y * (1 - c_t) + u_z * s_t) * (M_in[X]) + 
-            (c_t + pow(u_y, 2.0) * (1 - c_t)) * (M_in[Y]) +
-            (u_y * u_z * (1 - c_t) + u_x * s_t) * (M_in[Z]);
-        M_out[Z] = 
-            (u_x * u_z * (1 - c_t) - u_y * s_t) * (M_in[X]) +
-            (u_z * u_y * (1 - c_t) + u_x * s_t) * (M_in[Y]) + 
-            (c_t + pow(u_z, 2.0) * (1 - c_t)) * (M_in[Z]);
+        // M_out[X] = 
+        //     (c_t + pow(u_x, 2.0) * (1.0 - c_t)) * (M_in[X]) +
+        //     (u_x * u_y * (1.0 - c_t) - u_z * s_t) * (M_in[Y]) + 
+        //     (u_x * u_z * (1.0 - c_t) + u_y * s_t) * (M_in[Z]);
+        // M_out[Y] = 
+        //     (u_x * u_y * (1.0 - c_t) + u_z * s_t) * (M_in[X]) + 
+        //     (c_t + pow(u_y, 2.0) * (1.0 - c_t)) * (M_in[Y]) +
+        //     (u_y * u_z * (1.0 - c_t) + u_x * s_t) * (M_in[Z]);
+        // M_out[Z] = 
+        //     (u_x * u_z * (1.0 - c_t) - u_y * s_t) * (M_in[X]) +
+        //     (u_z * u_y * (1.0 - c_t) + u_x * s_t) * (M_in[Y]) + 
+        //     (c_t + pow(u_z, 2.0) * (1.0 - c_t)) * (M_in[Z]);
+
+        CROSS_3(M_in, B_eff, M_out, GAMMA * dt);
+        ADD_VEC_3(M_out, M_in);
+
+        //printf("2\n");
+        // Scaling the Semisoid component
+        // TODO - Absorption linshape of the semisoid pool
+        // We're supposed to assume the semisoid pool gets saturated
+        M_out[S] = M_in[S] * exp(-PI * pow(GAMMA * B_mag, 2.0) * dt);
+        //M_out[S] = M_in[S];
+    } else {
+        ASSIGN_VEC(M_in, M_out);
     }
-
-    // Scaling the Semisoid component
-    // TODO - Absorption linshape of the semisoid pool
-    // We're supposed to assume the semisoid pool gets saturated
-    M_out[S] = M_in[S] * exp(-PI * pow(GAMMA * B_mag, 2.0) * dt);
 }
 
 void LJN_decay_and_transfer(
@@ -142,7 +153,7 @@ void LJN_decay_and_transfer(
         // For short time, this operation approaches I
         // so M_out = M_in. THis means we can skip all
         // the math below.
-        ASSIGN_VEC(M_out, M_in);
+        ASSIGN_VEC(M_in, M_out);
         return;
     }
 
@@ -164,11 +175,11 @@ void LJN_decay_and_transfer(
     M_out[X] = exp(-t * T2_app) * M_in[X];
     M_out[Y] = exp(-t * T2_app) * M_in[Y];
     M_out[Z] = 
-        a_33 * ((M_in[Z] - D_z) * exp(-t * T1_app) + D_z) +
+        a_33 * ((M_in[Z] - D_z) * exp(-t * T1_app)) + D_z + 
         a_34 * ((M_in[S] - D_s) * exp(-t / T1_s));
     M_out[S] = 
         a_43 * ((M_in[Z] - D_z) * exp(-t * T1_app)) +
-        a_44 * ((M_in[S] - D_s) * exp(-t / T1_s) + D_s);
+        a_44 * ((M_in[S] - D_s) * exp(-t / T1_s)) + D_s;
 
     return;
 }

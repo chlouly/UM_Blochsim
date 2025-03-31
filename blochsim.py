@@ -102,7 +102,7 @@ def blochsim_ljn(B, s, M_start, T1s, T1f, T2f, dt, obs_time, ks, kf, f, F, lam, 
 
     if timer:
         print(f"Time: {end_t - start_t}")
-    
+
     if plot:
         plotter_4D(M, dt, dsample)
 
@@ -128,6 +128,7 @@ def plotter_4D(M, dt, dsample):
         plt.plot(time[ : ], M[::dsample, 1], label = 'y flow')
         plt.plot(time[ : ], M[::dsample, 2], label = 'z flow')
         plt.plot(time[ : ], M[::dsample, 3], label = 'semisoid')
+        #plt.ylim([-10, 10])
         plt.xlabel("Time [ms]")
         plt.ylabel("Magnetization")
         plt.title("Simulated Magnetization [T/volume]")
