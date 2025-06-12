@@ -17,7 +17,10 @@ void c_blochsim_ljn(
     double *,
     double *,
     double *,
+    int *,
     int,
+    int,
+    double,
     double,
     double,
     double,
@@ -34,12 +37,17 @@ void LJN_RF_excite(
     double *,
     double *,
     double *,
+    double,
+    double,
     double
 );
 
 void LJN_decay_and_transfer(
     double *,
     double *,
+    double,
+    double,
+    double,
     double,
     double,
     double,
@@ -77,7 +85,12 @@ void LJN_decay_and_transfer(
     (B)[Z] = (A)[Z]; \
     (B)[S] = (A)[S]; \
 
+#define CRUSH(M) \
+    (M)[X] = 0.0; \
+    (M)[Y] = 0.0; \
+
 #define PRINTVEC(A) printf("[ %f   %f   %f   %f ]\n", (A)[X], (A)[Y], (A)[Z], (A)[S]);
+#define PRINTVEC3(A) printf("[ %f   %f   %f ]\n", (A)[X], (A)[Y], (A)[Z]);
 
 
 

@@ -4,15 +4,15 @@ import ctypes
 import os
 import time as tm
 
-lib_path = os.path.abspath("./UM_Blochsim/UM_Blochsim.so")
+lib_path = os.path.abspath("./objects/simulators/UM_Blochsim/UM_Blochsim.so")
 lib = ctypes.CDLL(lib_path)
 
 lib.c_blochsim_eul.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_double]
 lib.c_blochsim_rk4.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_double]
 lib.c_blochsim_ljn.argtypes = [
     ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
-    ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double,
-    ctypes.c_double, ctypes.c_double, ctypes.c_double   
+    ctypes.POINTER(ctypes.c_int), ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double, 
+    ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double  
 ]
 
 def blochsim_eul(B, T1, T2, dt, plot=False, dsample=1, timer=False):
@@ -72,7 +72,7 @@ def blochsim_rk4(B, T1, T2, dt, plot=False, dsample=1, timer=False):
 
     return M
 
-def blochsim_ljn(B, s, M_start, T1s, T1f, T2f, dt, obs_time, ks, kf, f, F, lam, plot=False, dsample=1, timer=False):
+def blochsim_ljn(B, s, M_start, R1f_app, R2f_app, R1s_app, dt, ks, kf, f, M0_f, M0_s, crusher_inds=np.array([]), absorp=0.0, s_sat=0.0, plot=False, dsample=1, timer=False):
     if not isinstance(B, np.ndarray):
         raise TypeError("Input must be a NumPy array.")
     if B.dtype != np.float64:
@@ -95,9 +95,17 @@ def blochsim_ljn(B, s, M_start, T1s, T1f, T2f, dt, obs_time, ks, kf, f, F, lam, 
     M_ptr = M.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
     M_start_ptr = M_start.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
     s_ptr = s.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    
+    # Crusher Pointer
+    if crusher_inds == np.array([]):
+        crush_ptr = ctypes.POINTER(ctypes.c_int)()
+        num_crushers = 0
+    else:
+        crush_ptr = crusher_inds.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+        num_crushers = np.size(crusher_inds)
 
     start_t = tm.time()
-    lib.c_blochsim_ljn(M_ptr, B_ptr, s_ptr, M_start_ptr, ntime, np.float64(dt), obs_time, T1s, T1f, T2f, kf, ks, f, F, lam)
+    lib.c_blochsim_ljn(M_ptr, B_ptr, s_ptr, M_start_ptr, crush_ptr, num_crushers, ntime, np.float64(dt), f, ks, kf, R1f_app, R2f_app, R1s_app, M0_s, M0_f, absorp, s_sat)
     end_t = tm.time()
 
     if timer:
