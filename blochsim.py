@@ -4,9 +4,10 @@ import ctypes
 import os
 import time as tm
 
-lib_path = os.path.abspath("./objects/simulators/UM_Blochsim/UM_Blochsim.so")
-lib = ctypes.CDLL(lib_path)
 
+lib_dir = os.path.dirname(os.path.abspath(__file__)) + "/UM_Blochsim.so"
+lib = ctypes.CDLL(lib_dir)
+    
 lib.c_blochsim_eul.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_double]
 lib.c_blochsim_rk4.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_double]
 lib.c_blochsim_ljn.argtypes = [
