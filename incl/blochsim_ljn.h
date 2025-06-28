@@ -33,6 +33,27 @@ void c_blochsim_ljn(
     double
 );
 
+void c_blochsim_ljn_dyntime(
+    double *,
+    double *,
+    double *,
+    double *,
+    double *,    
+    int *,
+    int,
+    int,
+    double,
+    double,
+    double,
+    double,
+    double,
+    double,
+    double,
+    double,    
+    double,
+    double
+);
+
 void LJN_RF_excite(
     double *,
     double *,

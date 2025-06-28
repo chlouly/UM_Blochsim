@@ -5,28 +5,26 @@
 
 void c_blochsim_ljn(
     //INPUT ARGS
-    double * M,             // Acts as function output
-    double * B,
+    double * M,             // M(t) Acts as function output
+    double * B,             // B(t) Array of external magnetic field values
     double * s,             // s(t) values
-    double * M_start,
-    int * crush_inds,    // Indices of any crushers
+    double * M_start,       // Inital magnetization vector
+    int * crush_inds,       // Indices of any crushers
     int num_crushers,       // Number of Crushers in the sequence
     int n_time,             // Number of time Indices
-    double dt,              // tau
-    double f,
-    double ks,
-    double kf,
-    double R1f_app,
-    double R2f_app,
-    double R1s_app,
-    double M0_s,
-    double M0_f,
-    double absorp,
-    double s_sat
+    double dt,              // Timestep [ms]
+    double f,               
+    double ks,              // Forward transfer rate
+    double kf,              // Backward transfer rate
+    double R1f_app,         // Applied R1 for free water
+    double R2f_app,         // Applied R2 for free water
+    double R1s_app,         // Applied R1 for bound water
+    double M0_s,            // Steady state free water z magnetization
+    double M0_f,            // Steady state bound water z magnetization
+    double absorp,          // Absorption coeff
+    double s_sat            // Saturation coeff
 ) {
     /* -- Precalculations -- */
-    // double T1_app = (1 / T1f) + (F / lam);
-    // double T2_app = (1 / T2f) + (F / lam);
     double T1f_app = 1.0 / R1f_app;
     double T1s = 1.0 / R1s_app;
 
@@ -40,19 +38,9 @@ void c_blochsim_ljn(
     double ace_43 = (f - f * exp_val) * exp(-R1f_app * dt) / (1.0 + f);
     double ace_44 = (f + exp_val) * exp(-R1s_app * dt) / (1.0 + f);
 
-
-
-
-
-    // // M_a is the same as M_d from the previous itteration
-    // double M_b[4];
-    // // M_c is our output data, since that's what we keep
-    // double M_d[4];
-
     // Initializing M
     ASSIGN_VEC(M_start, M);
-    //ASSIGN_VEC(M_start, M_d);
-
+    
     int cur_crush = 0;
 
     for (int i = 1; i < n_time; i++) {
@@ -84,24 +72,91 @@ void c_blochsim_ljn(
             ace_43,
             ace_44
         );
-
-        // M_d[i] = A(t_i - z_i) C(t_i - z_i) E(t_i - z_i) M_b[i] + (I - A(t_i - z_i) C(t_i - _i) E(t_i - z_i)) D()
-        // LJN_decay_and_transfer(
-        //     M + off(i),
-        //     M_d,
-        //     dt,
-        //     s[i],
-        //     T1_app,
-        //     T2_app,
-        //     T1s,
-        //     kf,
-        //     ks,
-        //     1,   // M0z
-        //     1,   // M0s
-        //     f
-        // );
     }
 }
+
+
+void c_blochsim_ljn_dyntime(
+    //INPUT ARGS
+    double * M,             // M(t) Acts as function output
+    double * B,             // B(t) Array of external magnetic field values
+    double * s,             // s(t) values
+    double * M_start,       // Initial Magnetization vector
+    double * time,          // Sample points
+    int * crush_inds,       // Indices of any crushers
+    int num_crushers,       // Number of Crushers in the sequence
+    int n_time,             // Number of time Indices
+    double f,               
+    double ks,              // Forward transfer rate
+    double kf,              // Backward transfer rate
+    double R1f_app,         // Applied R1 for free water
+    double R2f_app,         // Applied R2 for free water
+    double R1s_app,         // Applied R1 for bound water
+    double M0_s,            // Steady state free water z magnetization
+    double M0_f,            // Steady state bound water z magnetization
+    double absorp,          // Absorption coeff
+    double s_sat            // Saturation coeff
+) {
+    /* -- Precalculations -- */
+    double T1f_app = 1.0 / R1f_app;
+    double T1s = 1.0 / R1s_app;
+
+    // Initializing M
+    ASSIGN_VEC(M_start, M);
+
+    // Declaring loop variables
+    int cur_crush = 0;
+    double last_time = 0.0;
+    double dt;
+    double exp_val, ace_11_22, ace_33, ace_34, ace_43, ace_44;
+
+    for (int i = 1; i < n_time; i++) {
+        // This simulation runs on a dynamic timestep, we find the timestep now
+        dt = time[i] - last_time;
+
+        // Now we calculate the 6 nonzero values of the ACE Matrix
+        exp_val = exp(-(f + 1.0) * ks * dt);
+        ace_11_22 = exp(-R2f_app * dt) * exp_val;
+        ace_33 = (1.0 + f * exp_val) * exp(-R1f_app * dt) / (1.0 + f);
+        ace_34 = (1.0 - exp_val) * exp(-R1s_app * dt) / (1.0 + f);
+        ace_43 = (f - f * exp_val) * exp(-R1f_app * dt) / (1.0 + f);
+        ace_44 = (f + exp_val) * exp(-R1s_app * dt) / (1.0 + f);
+
+        // M_b[i] = R_i M_d[i - 1]
+        // Equivalent to RF pulses and gradients.
+        LJN_RF_excite(M + off(i - 1), M + off(i), B + off3(i), dt, absorp, s_sat);
+
+        if ((crush_inds) && (crush_inds[cur_crush] == i)) {
+            CRUSH(M + off(i));      // Crush the transverse magnetization
+            cur_crush += 1;
+            cur_crush %= num_crushers;
+        }
+
+        // out = A(z_i) C(z_i) E(z_i) M_b[i] + (I - A(z_i) C(z_i) E(z_i)) D()
+        LJN_decay_and_transfer(
+            M + off(i),
+            M + off(i),
+            dt,
+            s[i],
+            T1f_app,
+            T1s,
+            kf,
+            ks,
+            M0_f,
+            M0_s,
+            ace_11_22,
+            ace_33,
+            ace_34,
+            ace_43,
+            ace_44
+        );
+
+        // Finally, we save the current time
+        last_time = time[i];
+    }
+}
+
+
 
 void LJN_RF_excite(
     double * M_in, 
