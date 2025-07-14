@@ -4,7 +4,7 @@
 {
     "distutils": {
         "include_dirs": [
-            "/tmp/build-env-ap8wo3bb/lib/python3.12/site-packages/numpy/_core/include"
+            "/private/var/folders/rj/8g9p19qx4q7dwmtrwzqjt7_m0000gn/T/build-env-4tqembc7/lib/python3.9/site-packages/numpy/_core/include"
         ],
         "name": "UM_Blochsim",
         "sources": [

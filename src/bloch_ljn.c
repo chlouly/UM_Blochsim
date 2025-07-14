@@ -46,7 +46,7 @@ void c_blochsim_ljn(
     for (int i = 1; i < n_time; i++) {
         // M_b[i] = R_i M_d[i - 1]
         // Equivalent to RF pulses and gradients.
-        LJN_RF_excite(M + off(i - 1), M + off(i), B + off3(i), dt, absorp, s_sat);
+        LJN_RF_excite(M + off(i - 1), M + off(i), B + off3(i - 1), dt, absorp, s_sat);
 
         if ((crush_inds) && (crush_inds[cur_crush] == i)) {
             CRUSH(M + off(i));      // Crush the transverse magnetization
@@ -59,7 +59,7 @@ void c_blochsim_ljn(
             M + off(i),
             M + off(i),
             dt,
-            s[i],
+            s[i - 1],
             T1f_app,
             T1s,
             kf,
@@ -106,7 +106,7 @@ void c_blochsim_ljn_dyntime(
 
     // Declaring loop variables
     int cur_crush = 0;
-    double last_time = 0.0;
+    double last_time = time[0];
     double dt;
     double exp_val, ace_11_22, ace_33, ace_34, ace_43, ace_44;
 
@@ -124,7 +124,7 @@ void c_blochsim_ljn_dyntime(
 
         // M_b[i] = R_i M_d[i - 1]
         // Equivalent to RF pulses and gradients.
-        LJN_RF_excite(M + off(i - 1), M + off(i), B + off3(i), dt, absorp, s_sat);
+        LJN_RF_excite(M + off(i - 1), M + off(i), B + off3(i - 1), dt, absorp, s_sat);
 
         if ((crush_inds) && (crush_inds[cur_crush] == i)) {
             CRUSH(M + off(i));      // Crush the transverse magnetization
@@ -137,7 +137,7 @@ void c_blochsim_ljn_dyntime(
             M + off(i),
             M + off(i),
             dt,
-            s[i],
+            s[i - 1],
             T1f_app,
             T1s,
             kf,
@@ -205,14 +205,14 @@ void LJN_RF_excite(
         // TODO - Absorption linshape of the semisoid pool
         // We're supposed to assume the semisoid pool gets saturated
         // NOTE: should there be a dt here?
-        M_out[S] = M_in[S] * exp(-PI * pow(GAMMA * B_mag, 2.0) * absorp);
+        M_out[S] = M_in[S] * exp(-PI * pow(GAMMA * B_mag, 2.0) * absorp * dt);
     } else {
         // Otherwise we just copy the vector
         ASSIGN_VEC(M_in, M_out);
     }
 
     if (isnaprox(s_sat, 0.0)) {
-        M_out[S] *= exp(-PI * s_sat);
+        M_out[S] *= exp(-PI * s_sat * dt);
     }
 }
 
